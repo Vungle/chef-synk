@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/marpaia/chef-golang"
 	"os"
 )
 
-var findNode = os.Getenv("CHEF_SYNK_NODE")
+// Query Example: "role:spark_sparklecrunch_worker AND chef_environment:vungle_legacy"
+
+var query = os.Getenv("SEARCH_QUERY")
 
 func main() {
 	c, err := chef.Connect("knife.rb")
@@ -15,15 +18,14 @@ func main() {
 		os.Exit(1)
 	}
 	c.SSLNoVerify = true
-	nodes, err := c.GetNodes()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	// do what you please with the "node" variable which is a map of
-	// node names to node URLs
-	for node := range nodes {
-		fmt.Println(node)
+	var n chef.Node
+	s, err := c.Search("node", query)
+	for _, node := range s.Rows {
+		err := json.Unmarshal(node, &n)
+		if err != nil {
+			// Handle
+		}
+		fmt.Println(n.Info.IPAddress)
 	}
 
 }
