@@ -1,0 +1,39 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: chef-synk
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: chef-synk
+    spec:
+      containers:
+      - name: chef-synk
+        image: vungle/chef-synk
+        #resources:
+        #  limits:
+        #    cpu: "1"
+        #    memory: 512Mi
+        #  requests:
+        #    cpu: "1"
+        #    memory: 512Mi
+        env:
+          - name: SEARCH_QUERY
+            value: "role:*adserver_router* AND chef_environment:vungle_legacy"
+          - name: KUBERNETES_NAMESPACE
+            value: "default"
+          - name: INTERVAL
+            value: "30"
+          - name: KNIFE_PATH
+            value: "/etc/chef-synk/knife.rb"
+        volumeMounts:
+          - name: "chef-secrets"
+            mountPath: "/etc/chef-synk"
+            readOnly: true
+      volumes:
+        - name: "chef-secrets"
+          secret:
+            secretName: "chef"
