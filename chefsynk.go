@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/marpaia/chef-golang"
-	"k8s.io/kubernetes/pkg/api"
+	_ "k8s.io/kubernetes/pkg/api"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"os"
 	"strconv"
@@ -34,17 +34,20 @@ func main() {
 			}
 			fmt.Println(n.Info.IPAddress)
 		}
+		ingress()
 		time.Sleep(time.Duration(interval) * time.Second)
 	}
 }
 
 func ingress() {
-	var ingClient client.IngressInterface
+	var endClient client.EndpointsInterface
 	if kubeClient, err := client.NewInCluster(); err != nil {
 		fmt.Printf("Failed to create client: %v.\n", err)
 	} else {
-		ingClient = kubeClient.Extensions().Ingress(os.Getenv("INGRESS_NAMESPACE"))
+		endClient = kubeClient.Endpoints(os.Getenv("KUBE_NAMESPACE"))
 	}
-	i, _ := ingClient.List(api.ListOptions{})
-	fmt.Printf("%v", i)
+	e, _ := endClient.Get(os.Getenv("KUBE_ENDPOINT"))
+	for _, s := range e.Subsets {
+		fmt.Printf("%v", s.Addresses)
+	}
 }
