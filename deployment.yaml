@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: chef-synk
-        image: vungle/chef-synk:0.1.6
+        image: vungle/chef-synk:0.1.8
         #resources:
         #  limits:
         #    cpu: "1"

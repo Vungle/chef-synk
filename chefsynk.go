@@ -15,6 +15,7 @@ import (
 // Query Example: "role:spark_sparklecrunch_worker AND chef_environment:vungle_legacy"
 
 var query = os.Getenv("SEARCH_QUERY")
+var endClient client.EndpointsInterface
 
 func main() {
 	interval, _ := strconv.ParseInt(os.Getenv("INTERVAL"), 10, 64)
@@ -24,6 +25,11 @@ func main() {
 		os.Exit(1)
 	}
 	c.SSLNoVerify = true
+	if kubeClient, err := client.NewInCluster(); err != nil {
+		fmt.Printf("Failed to create client: %v.\n", err)
+	} else {
+		endClient = kubeClient.Endpoints(os.Getenv("KUBE_NAMESPACE"))
+	}
 	for {
 		var chef_nodes = []api.EndpointAddress{}
 		var n chef.Node
@@ -38,26 +44,25 @@ func main() {
 			chef_node := api.EndpointAddress{IP: n.Info.IPAddress}
 			chef_nodes = append(chef_nodes, chef_node)
 		}
-		kube_ep_addresses := endpoints()
+		e, _ := endClient.Get(os.Getenv("KUBE_ENDPOINT"))
+		kube_ep_addresses := e.Subsets[0].Addresses
 		if !reflect.DeepEqual(chef_nodes, kube_ep_addresses) {
-			fmt.Printf("Kube is not in sync with Chef! \nChef Says:\n %v \n\n Kube Says:\n %v \n\n", chef_nodes, kube_ep_addresses)
+			fmt.Printf("\nKube is not in sync with Chef! \nChef Says:\n %v \n\n Kube Says:\n %v \n\n", chef_nodes, kube_ep_addresses)
+			if !reflect.DeepEqual(api.EndpointAddress{}, chef_nodes) {
+				e.Subsets[0].Addresses = chef_nodes
+				new_eps, err := endClient.Update(e)
+				if err != nil {
+					// Handle
+					fmt.Println("Failed to update endpoint:\n %v", err)
+				} else {
+					fmt.Printf("Update suceeded:\n %v", new_eps)
+				}
+			} else {
+				fmt.Println("Avoiding Updating With No Data")
+			}
 		} else {
 			fmt.Println("Kube is in sync with Chef!")
 		}
 		time.Sleep(time.Duration(interval) * time.Second)
 	}
-}
-
-func endpoints() []api.EndpointAddress {
-	var endClient client.EndpointsInterface
-	if kubeClient, err := client.NewInCluster(); err != nil {
-		fmt.Printf("Failed to create client: %v.\n", err)
-	} else {
-		endClient = kubeClient.Endpoints(os.Getenv("KUBE_NAMESPACE"))
-	}
-	e, _ := endClient.Get(os.Getenv("KUBE_ENDPOINT"))
-	/*for _, s := range e.Subsets {
-		fmt.Printf("%v", s.Addresses)
-	}*/
-	return e.Subsets[0].Addresses
 }
