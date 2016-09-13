@@ -1,5 +1,5 @@
 # chef-synk
-[![Circle CI](https://circleci.com/gh/Vungle/chef-synk)](https://circleci.com/gh/Vungle/docker-chef-synk/tree/master) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://registry.hub.docker.com/u/vungle/chef-synk/) [![Docker Pulls](https://img.shields.io/docker/pulls/vungle/chef-synk.svg)](https://registry.hub.docker.com/u/vungle/chef-synk/)
+[![CircleCI](https://circleci.com/gh/Vungle/chef-synk/tree/master.svg?style=svg)](https://circleci.com/gh/Vungle/chef-synk/tree/master) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://registry.hub.docker.com/u/vungle/chef-synk/) [![Docker Pulls](https://img.shields.io/docker/pulls/vungle/chef-synk.svg)](https://registry.hub.docker.com/u/vungle/chef-synk/)
 
 To Build
 ``` make build ```
