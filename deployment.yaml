@@ -22,13 +22,13 @@ spec:
             memory: 512Mi
         env:
           - name: SEARCH_QUERY
-            value: "role:*adserver_router* AND chef_environment:vungle_legacy"
+            value: "role:*webserver6* AND chef_environment:vungle_legacy"
           - name: KUBE_NAMESPACE
             value: "default"
           - name: INTERVAL
             value: "60"
           - name: KUBE_ENDPOINT
-            value: "adserverrouter"
+            value: "adserver"
           - name: KNIFE_PATH
             value: "/etc/chef-synk/knife.rb"
         volumeMounts:
