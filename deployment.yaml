@@ -24,7 +24,7 @@ spec:
           - name: SEARCH_QUERY
             value: "role:*webserver6* AND chef_environment:vungle_legacy"
           - name: KUBE_NAMESPACE
-            value: "default"
+            value: "prod"
           - name: INTERVAL
             value: "60"
           - name: KUBE_ENDPOINT
