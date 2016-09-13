@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/bradfitz/slice"
 	"github.com/marpaia/chef-golang"
+	"github.com/zorkian/go-datadog-api"
 	"k8s.io/kubernetes/pkg/api"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"log"
@@ -17,19 +19,29 @@ import (
 
 var query = os.Getenv("SEARCH_QUERY")
 var endClient client.EndpointsInterface
+var ddog *datadog.Client
+var ddog_app_key = os.Getenv("DDOG_APP_KEY")
+var ddog_api_key = os.Getenv("DDOG_API_KEY")
 
 func main() {
+	// Set sleep interval
 	interval, _ := strconv.ParseInt(os.Getenv("INTERVAL"), 10, 64)
+	// Connect to chef
 	c, err := chef.Connect(os.Getenv("KNIFE_PATH"))
 	if err != nil {
 		log.Printf("Error:", err)
 		os.Exit(1)
 	}
 	c.SSLNoVerify = true
+	// Connect to Kube API
 	if kubeClient, err := client.NewInCluster(); err != nil {
 		log.Printf("Failed to create client: %v.\n", err)
 	} else {
 		endClient = kubeClient.Endpoints(os.Getenv("KUBE_NAMESPACE"))
+	}
+	// Connect to Datadog
+	if ddog_api_key != "" && ddog_app_key != "" {
+		ddog = datadog.NewClient(ddog_api_key, ddog_app_key)
 	}
 	// Start Main Loop
 	for {
@@ -38,8 +50,18 @@ func main() {
 		// Connect to Chef Server
 		s, err := c.Search("node", query)
 		if err != nil {
-			// Handle
 			log.Printf("Failed to connect to chef")
+			// Send Event to Data Dog if Enabled
+			if ddog != nil {
+				event := datadog.Event{
+					Title:     "Chef Synk Error:",
+					Text:      "Failed to connect to chef",
+					AlertType: "error",
+					Host:      os.Getenv("HOSTNAME"),
+				}
+				de, _ := ddog.PostEvent(&event)
+				log.Printf("%v", de)
+			}
 			os.Exit(1)
 		}
 		// Store Chef Results Like Kube API Formant
@@ -83,8 +105,30 @@ func main() {
 			new_eps, err := endClient.Update(e)
 			if err != nil {
 				log.Printf("Failed to update endpoint:\n %v", err)
+				if ddog != nil {
+					text := fmt.Sprintf("Failed to Update Endpoint: %v\nFor Endpoint: %v\n", query, os.Getenv("KUBE_ENDPOINT"))
+					event := datadog.Event{
+						Title:     "Chef Synk Fail:",
+						Text:      text,
+						AlertType: "error",
+						Host:      os.Getenv("HOSTNAME"),
+					}
+					de, _ := ddog.PostEvent(&event)
+					log.Printf("%v", de)
+				}
 			} else {
 				log.Printf("Update suceeded:\n %v", new_eps)
+				if ddog != nil {
+					text := fmt.Sprintf("Updated Nodes From Search: %v\nFor Endpoint: %v\nNum of Endpoints: %v", query, os.Getenv("KUBE_ENDPOINT"), len(e.Subsets[0].Addresses))
+					event := datadog.Event{
+						Title:     "Chef Synking Success:",
+						Text:      text,
+						AlertType: "info",
+						Host:      os.Getenv("HOSTNAME"),
+					}
+					de, _ := ddog.PostEvent(&event)
+					log.Printf("%v", de)
+				}
 			}
 		}
 		// Wait for interval before starting ( this is for backing off on failure )

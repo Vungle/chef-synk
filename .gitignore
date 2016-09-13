@@ -1,3 +1,4 @@
 bin/
 vungle.pem
 knife.rb
+keys.yaml

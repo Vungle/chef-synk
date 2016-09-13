@@ -12,7 +12,8 @@ spec:
     spec:
       containers:
       - name: chef-synk
-        image: vungle/chef-synk:0.2.1
+        imagePullPolicy: "Always"
+        image: vungle/chef-synk:0.2.2
         resources:
           limits:
             cpu: "2"
@@ -31,6 +32,16 @@ spec:
             value: "adserver"
           - name: KNIFE_PATH
             value: "/etc/chef-synk/knife.rb"
+          - name: DDOG_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: datadog-api-keys
+                key: api
+          - name: DDOG_APP_KEY
+            valueFrom:
+              secretKeyRef:
+                name: datadog-api-keys
+                key: chef-synk
         volumeMounts:
           - name: "chef-secrets"
             mountPath: "/etc/chef-synk"
