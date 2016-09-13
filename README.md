@@ -1,4 +1,18 @@
 # chef-synk
+[![Circle CI](https://circleci.com/gh/Vungle/chef-synk)](https://circleci.com/gh/Vungle/docker-chef-synk/tree/master) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://registry.hub.docker.com/u/vungle/chef-synk/) [![Docker Pulls](https://img.shields.io/docker/pulls/vungle/chef-synk.svg)](https://registry.hub.docker.com/u/vungle/chef-synk/)
+
+To Build
+``` make build ```
+
+To run
+
+```
+sudo su - 
+mkdir -p /mnt/opt
+docker run -d -p 443:443 -v /mnt/opt:/var/opt -v /etc/chef-server:/etc/chef-server vungle/chef-server
+```
+
+
 Add Chef Nodes as Endpoints for Kubernetes External Services
 
 ## Development
