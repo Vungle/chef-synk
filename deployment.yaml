@@ -23,13 +23,13 @@ spec:
             memory: 512Mi
         env:
           - name: SEARCH_QUERY
-            value: "role:*webserver6* AND chef_environment:vungle_legacy"
+            value: "role:*adserver_router_vpc AND chef_environment:vungle_legacy"
           - name: KUBE_NAMESPACE
             value: "prod"
           - name: INTERVAL
             value: "60"
           - name: KUBE_ENDPOINT
-            value: "adserver"
+            value: "adserverrouter"
           - name: KNIFE_PATH
             value: "/etc/chef-synk/knife.rb"
           - name: DDOG_API_KEY
